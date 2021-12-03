@@ -73,6 +73,7 @@ Explore::Explore()
                                                  potential_scale_, gain_scale_,
                                                  min_frontier_size);
 
+  sub = private_nh_.subscribe("pause_exploration", 1000, &Explore::pauseExploration, this);
   if (visualize_) {
     marker_array_publisher_ =
         private_nh_.advertise<visualization_msgs::MarkerArray>("frontiers", 10);
@@ -90,6 +91,11 @@ Explore::Explore()
 Explore::~Explore()
 {
   stop();
+}
+
+void Explore::pauseExploration(std_msgs::Bool msg)
+{
+  pause_exploration_ = msg.data;
 }
 
 void Explore::visualizeFrontiers(
@@ -178,6 +184,17 @@ void Explore::visualizeFrontiers(
 
 void Explore::makePlan()
 {
+  if(pause_exploration_)
+  {
+    if(once_)
+    {
+      move_base_client_.cancelGoal();;
+    }
+    once_ = false;
+    return;
+  }
+  once_ = true;
+
   // find frontiers
   auto pose = costmap_client_.getRobotPose();
   // get frontiers sorted according to cost

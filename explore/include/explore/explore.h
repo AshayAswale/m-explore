@@ -51,6 +51,8 @@
 #include <explore/costmap_client.h>
 #include <explore/frontier_search.h>
 
+#include <std_msgs/Bool.h>
+
 namespace explore
 {
 /**
@@ -85,9 +87,12 @@ private:
 
   bool goalOnBlacklist(const geometry_msgs::Point& goal);
 
+  void pauseExploration(std_msgs::Bool msg);
+
   ros::NodeHandle private_nh_;
   ros::NodeHandle relative_nh_;
   ros::Publisher marker_array_publisher_;
+  ros::Subscriber sub;
   tf::TransformListener tf_listener_;
 
   Costmap2DClient costmap_client_;
@@ -108,6 +113,8 @@ private:
   double potential_scale_, orientation_scale_, gain_scale_;
   ros::Duration progress_timeout_;
   bool visualize_;
+  bool pause_exploration_ = false;
+  bool once_ = true;
 };
 }
 

@@ -113,7 +113,7 @@ private:
   double potential_scale_, orientation_scale_, gain_scale_;
   ros::Duration progress_timeout_;
   bool visualize_;
-  bool pause_exploration_ = false;
+  bool pause_exploration_ = true;
   bool once_ = true;
 };
 }

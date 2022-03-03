@@ -16,6 +16,16 @@ find_package(catkin REQUIRED COMPONENTS
   visualization_msgs
 )
 
+add_message_files(
+  FILES
+  FrontiersArray.msg
+)
+
+generate_messages(
+  DEPENDENCIES
+  std_msgs
+  geometry_msgs
+)
 ###################################
 ## catkin specific configuration ##
 ###################################

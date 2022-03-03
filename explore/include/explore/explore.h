@@ -50,6 +50,7 @@
 
 #include <explore/costmap_client.h>
 #include <explore/frontier_search.h>
+#include <explore_lite/FrontiersArray.h>
 
 #include <std_msgs/Bool.h>
 
@@ -74,12 +75,18 @@ private:
    * @brief  Make a global plan
    */
   void makePlan();
+  void publish_frontiers_freq();
+
 
   /**
    * @brief  Publish a frontiers as markers
    */
   void visualizeFrontiers(
       const std::vector<frontier_exploration::Frontier>& frontiers);
+
+  void publish_frontiers(
+      const std::vector<frontier_exploration::Frontier>& frontiers);
+
 
   void reachedGoal(const actionlib::SimpleClientGoalState& status,
                    const move_base_msgs::MoveBaseResultConstPtr& result,
@@ -93,6 +100,7 @@ private:
   ros::NodeHandle relative_nh_;
   ros::Publisher marker_array_publisher_;
   ros::Subscriber sub;
+  ros::Publisher frontier_array_publisher_;
   tf::TransformListener tf_listener_;
 
   Costmap2DClient costmap_client_;
@@ -100,6 +108,7 @@ private:
       move_base_client_;
   frontier_exploration::FrontierSearch search_;
   ros::Timer exploring_timer_;
+  ros::Timer frontier_publishing_timer_;
   ros::Timer oneshot_;
 
   std::vector<geometry_msgs::Point> frontier_blacklist_;

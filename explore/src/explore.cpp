@@ -75,17 +75,16 @@ Explore::Explore()
 
   sub = private_nh_.subscribe("pause_exploration", 1000, &Explore::pauseExploration, this);
   if (visualize_) {
-    marker_array_publisher_ =
-        private_nh_.advertise<visualization_msgs::MarkerArray>("frontiers", 10);
+    marker_array_publisher_ = private_nh_.advertise<visualization_msgs::MarkerArray>("frontiers", 10);
   }
+  frontier_array_publisher_ = private_nh_.advertise<explore_lite::FrontiersArray>("/frontier_list", 1000);
 
   ROS_INFO("Waiting to connect to move_base server");
   move_base_client_.waitForServer();
   ROS_INFO("Connected to move_base server");
 
-  exploring_timer_ =
-      relative_nh_.createTimer(ros::Duration(1. / planner_frequency_),
-                               [this](const ros::TimerEvent&) { makePlan(); });
+  exploring_timer_ = relative_nh_.createTimer(ros::Duration(1. / planner_frequency_), [this](const ros::TimerEvent&) { makePlan(); });
+  frontier_publishing_timer_ = relative_nh_.createTimer(ros::Duration(1. / planner_frequency_), [this](const ros::TimerEvent&) {publish_frontiers_freq(); });
 }
 
 Explore::~Explore()
@@ -182,6 +181,25 @@ void Explore::visualizeFrontiers(
   marker_array_publisher_.publish(markers_msg);
 }
 
+void Explore::publish_frontiers_freq()
+{
+  auto pose = costmap_client_.getRobotPose();
+  auto frontiers = search_.searchFrom(pose.position);
+  publish_frontiers(frontiers);
+}
+void Explore::publish_frontiers(const std::vector<frontier_exploration::Frontier>& frontiers){
+  ROS_DEBUG("publishing %lu frontiers", frontiers.size());
+  explore_lite::FrontiersArray frontiers_msg;
+  // std::vector<geometry_msgs::Point> frontiers_msg;
+  geometry_msgs::Point frontiers_point;
+  for (auto& frontier : frontiers){
+    frontiers_point=frontier.initial;
+    frontiers_msg.frontiers.push_back(frontiers_point);
+  }
+  // frontier_publish=frontiers_msg;
+  frontier_array_publisher_.publish(frontiers_msg);
+}
+
 void Explore::makePlan()
 {
   if(pause_exploration_)
@@ -214,6 +232,8 @@ void Explore::makePlan()
     visualizeFrontiers(frontiers);
   }
 
+
+  // publish_frontiers(frontiers);
   // find non blacklisted frontier
   auto frontier =
       std::find_if_not(frontiers.begin(), frontiers.end(),
@@ -300,12 +320,14 @@ void Explore::reachedGoal(const actionlib::SimpleClientGoalState& status,
 void Explore::start()
 {
   exploring_timer_.start();
+  frontier_publishing_timer_.start();
 }
 
 void Explore::stop()
 {
   move_base_client_.cancelAllGoals();
   exploring_timer_.stop();
+  frontier_publishing_timer_.stop();
   ROS_INFO("Exploration stopped.");
 }
 

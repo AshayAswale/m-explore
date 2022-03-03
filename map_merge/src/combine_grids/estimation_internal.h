@@ -49,10 +49,6 @@
 #include "opencv2/xfeatures2d/nonfree.hpp"
 #endif
 
-#ifdef HAVE_OPENCV_XFEATURES2D
-#include <opencv2/xfeatures2d/nonfree.hpp>
-#endif
-
 namespace combine_grids
 {
 namespace internal
@@ -73,9 +69,6 @@ static inline cv::Ptr<cv::Feature2D> chooseFeatureFinder(FeatureType type)
       return cv::AKAZE::create();
 #endif
   }
-
-  assert(false);
-  return {};
 }
 
 #else  // (CV_VERSION_MAJOR < 4)
